@@ -8,14 +8,12 @@ import uuid
 import threading
 
 
-# --------------------------------------
-# Função para validar links
-# --------------------------------------
-import re
-
+# ======================================
+# VALIDAR LINKS
+# ======================================
 def validar_link(url):
     patterns = [
-        # YouTube: vídeos normais, links curtos e shorts
+        # YouTube (normal, curto, shorts)
         r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)[\w-]+",
 
         # Facebook
@@ -27,39 +25,36 @@ def validar_link(url):
         # Twitch
         r"(https?://)?(www\.)?twitch\.tv/.+",
 
-        # TikTok (normal + link curto vt.tiktok.com)
+        # TikTok (normal + vt.tiktok)
         r"(https?://)?(www\.)?(tiktok\.com/.+|vt\.tiktok\.com/[\w-]+)",
     ]
 
-    for pattern in patterns:
-        if re.match(pattern, url):
-            return True
-    return False
+    return any(re.match(p, url) for p in patterns)
 
 
-
-# --------------------------------------
-# Função para limpar nomes de arquivos
-# --------------------------------------
+# ======================================
+# SANITIZAR NOME DE ARQUIVO
+# ======================================
 def sanitize_filename(name):
-    # Remove apenas caracteres inválidos do Windows
     return re.sub(r'[\\/*?:"<>|]', "", name)
 
-# --------------------------------------
-# Função para baixar TikTok sem login
-# --------------------------------------
+
+# ======================================
+# TIKTOK SEM LOGIN (API)
+# ======================================
 def baixar_tiktok_sem_login(url):
     api = "https://www.tikwm.com/api/"
-    r = requests.post(api, data={"url": url}).json()
+    r = requests.post(api, data={"url": url}, timeout=20).json()
 
-    if r["code"] != 0:
-        raise Exception("Erro na API TikWM: " + r.get("msg", "Desconhecido"))
+    if r.get("code") != 0:
+        raise Exception("Erro ao baixar TikTok")
 
-    return r["data"]["play"]  # URL do vídeo MP4 direto
+    return r["data"]["play"]
 
-# --------------------------------------
-# Função para apagar arquivo após X segundos
-# --------------------------------------
+
+# ======================================
+# APAGAR ARQUIVO APÓS X SEGUNDOS
+# ======================================
 def apagar_arquivo_apos_tempo(filename, segundos=40):
     def apagar():
         try:
@@ -67,132 +62,87 @@ def apagar_arquivo_apos_tempo(filename, segundos=40):
                 os.remove(filename)
         except:
             pass
-    timer = threading.Timer(segundos, apagar)
-    timer.start()
 
-# --------------------------------------
-# Rota principal
-# --------------------------------------
+    threading.Timer(segundos, apagar).start()
+
+
+# ======================================
+# ROTAS
+# ======================================
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# --------------------------------------
-# Rota de download
-# --------------------------------------
+
 @app.route('/download', methods=['POST'])
 def download_video():
     url = request.form.get('video_url')
+
     if not url:
-        return "Você precisa fornecer um link de vídeo."
+        return "Você precisa fornecer um link."
 
     if not validar_link(url):
-        return "Link inválido!"
+        return "Link inválido."
 
     downloads_path = os.path.join(os.getcwd(), 'downloads')
     os.makedirs(downloads_path, exist_ok=True)
 
     try:
-        # ---------------- TIKTOK ----------------
+        # ==========================
+        # TIKTOK
+        # ==========================
         if "tiktok.com" in url:
             mp4_url = baixar_tiktok_sem_login(url)
-            filename = os.path.join(downloads_path, f"tiktok_{uuid.uuid4().hex}.mp4")
+            filename = os.path.join(
+                downloads_path, f"tiktok_{uuid.uuid4().hex}.mp4"
+            )
 
-            r = requests.get(mp4_url)
+            r = requests.get(mp4_url, timeout=30)
             with open(filename, "wb") as f:
                 f.write(r.content)
 
             apagar_arquivo_apos_tempo(filename)
             return send_file(filename, as_attachment=True)
 
-        # ---------------- YOUTUBE / OUTROS ----------------
+        # ==========================
+        # YOUTUBE / INSTAGRAM / OUTROS
+        # ==========================
         ydl_opts = {
-            # força 720p máximo
+            # MP4 progressivo até 720p
             'format': 'best[ext=mp4][height<=720]/best[height<=720]',
+            'merge_output_format': 'mp4',
 
             'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'),
 
-            # evita DASH separado
-            'merge_output_format': 'mp4',
-
+            # client menos bloqueado
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android']
                 }
             },
 
+            # user-agent real
+            'http_headers': {
+                'User-Agent': (
+                    'Mozilla/5.0 (Linux; Android 11; Pixel 5) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/120.0.0.0 Mobile Safari/537.36'
+                )
+            },
+
             'quiet': True,
+            'no_warnings': True,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            filename = ydl.prepare_filename(info)
-
-        filename = sanitize_filename(filename)
+            filename = sanitize_filename(ydl.prepare_filename(info))
 
         apagar_arquivo_apos_tempo(filename)
         return send_file(filename, as_attachment=True)
 
-    except Exception as e:
-        return f"Erro ao baixar o vídeo: {e}"
-
-    url = request.form.get('video_url')
-    if not url:
-        return "Você precisa fornecer um link de vídeo."
-
-    # Valida o link antes de qualquer download
-    if not validar_link(url):
-        return "Link inválido! Por favor, cole um link válido do YouTube, TikTok, Instagram, Facebook ou Twitch."
-
-    # Cria pasta downloads
-    downloads_path = os.path.join(os.getcwd(), 'downloads')
-    os.makedirs(downloads_path, exist_ok=True)
-
-    try:
-        # ------------------------------
-        # Caso seja TikTok
-        # ------------------------------
-        if "tiktok.com" in url:
-            mp4_url = baixar_tiktok_sem_login(url)
-
-            # Nome aleatório único
-            filename = os.path.join(downloads_path, f"tiktok_{uuid.uuid4().hex}.mp4")
-
-            # Baixa o vídeo
-            r = requests.get(mp4_url)
-            with open(filename, "wb") as f:
-                f.write(r.content)
-
-            # Apaga após 40 segundos
-            apagar_arquivo_apos_tempo(filename, segundos=40)
-
-            return send_file(filename, as_attachment=True)
-
-        # ------------------------------
-        # Caso seja YouTube ou outro site
-        # ------------------------------
-        else:
-            ydl_opts = {
-                'format': 'best',
-                'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'), # evita warning e bloqueio do YouTube
-                'extractor_args': {
-                    'youtube': {
-                        'player_client': ['android', 'web']
-                    }
-                },
-            }
-
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info_dict = ydl.extract_info(url, download=True)
-                filename = os.path.join(
-                    downloads_path,
-                    sanitize_filename(ydl.prepare_filename(info_dict).split(os.sep)[-1])
-                )
-
-            # Apaga após 40 segundos
-            apagar_arquivo_apos_tempo(filename, segundos=40)
-
-            return send_file(filename, as_attachment=True)
-
-    except Exception as e:
-        return f"Erro ao baixar o vídeo: {e}"
+    except Exception:
+        return (
+            "Não foi possível baixar este vídeo agora. "
+            "Tente novamente mais tarde ou use outro link."
+        )
