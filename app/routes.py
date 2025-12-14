@@ -86,6 +86,64 @@ def download_video():
     if not url:
         return "Você precisa fornecer um link de vídeo."
 
+    if not validar_link(url):
+        return "Link inválido!"
+
+    downloads_path = os.path.join(os.getcwd(), 'downloads')
+    os.makedirs(downloads_path, exist_ok=True)
+
+    try:
+        # ---------------- TIKTOK ----------------
+        if "tiktok.com" in url:
+            mp4_url = baixar_tiktok_sem_login(url)
+            filename = os.path.join(downloads_path, f"tiktok_{uuid.uuid4().hex}.mp4")
+
+            r = requests.get(mp4_url)
+            with open(filename, "wb") as f:
+                f.write(r.content)
+
+            apagar_arquivo_apos_tempo(filename)
+            return send_file(filename, as_attachment=True)
+
+        # ---------------- YOUTUBE / OUTROS ----------------
+        ydl_opts = {
+            'format': 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best',
+            'merge_output_format': 'mp4',
+
+            'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'),
+
+            'postprocessors': [
+                {
+                    'key': 'FFmpegVideoRemuxer',
+                    'preferedformat': 'mp4',
+                }
+            ],
+
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web']
+                }
+            },
+
+            'quiet': True,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+
+        filename = sanitize_filename(filename)
+
+        apagar_arquivo_apos_tempo(filename)
+        return send_file(filename, as_attachment=True)
+
+    except Exception as e:
+        return f"Erro ao baixar o vídeo: {e}"
+
+    url = request.form.get('video_url')
+    if not url:
+        return "Você precisa fornecer um link de vídeo."
+
     # Valida o link antes de qualquer download
     if not validar_link(url):
         return "Link inválido! Por favor, cole um link válido do YouTube, TikTok, Instagram, Facebook ou Twitch."
