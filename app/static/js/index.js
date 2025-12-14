@@ -21,8 +21,7 @@ form.addEventListener("submit", async (e) => {
 
   if (!validarLink(url)) {
     mensagem.style.display = "block";
-    mensagem.textContent =
-      "Cole um link válido de YouTube, TikTok, Instagram, Facebook ou Twitch.";
+    mensagem.textContent = "Cole um link válido.";
     return;
   }
 
