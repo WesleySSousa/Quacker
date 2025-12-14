@@ -64,7 +64,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 35px;
+  gap: 15px;
   padding-bottom: 40px;
 }
 
@@ -216,10 +216,7 @@ footer {
   text-align: center;
   padding: 20px 0;
   color: #888;
-  position: fixed;
   width: 100%;
-  bottom: 0;
-  left: 0;
 }
 
 /* Mensagem animada acima do input */
@@ -320,5 +317,98 @@ footer {
 
   #mensagem {
     width: 95%;
+  }
+}
+/* ===== SEÇÕES EXTRAS ===== */
+section {
+  width: 100%;
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* ===== COMO FUNCIONA ===== */
+.ComoFunciona h2,
+.Vantagens h2,
+.Aviso h2 {
+  text-align: center;
+  font-size: 34px;
+  letter-spacing: 4px;
+  margin-bottom: 40px;
+}
+
+.Passos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+}
+
+.Passos div {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: 0.3s;
+}
+
+.Passos div:hover {
+  transform: translateY(-6px);
+}
+
+.Passos span {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  background: rgb(255, 94, 0);
+  color: #fff;
+  border-radius: 50%;
+  line-height: 40px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* ===== VANTAGENS ===== */
+.Vantagens .Cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.Vantagens .Card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+  transition: 0.3s;
+}
+
+.Vantagens .Card:hover {
+  color: rgb(255, 94, 0);
+  transform: scale(1.05);
+}
+
+/* ===== AVISO ===== */
+.Aviso p {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #666;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  section {
+    margin: 30px auto;
+  }
+
+  .ComoFunciona h2,
+  .Vantagens h2,
+  .Aviso h2 {
+    font-size: 26px;
   }
 }
