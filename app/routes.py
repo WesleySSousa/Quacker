@@ -107,21 +107,17 @@ def download_video():
 
         # ---------------- YOUTUBE / OUTROS ----------------
         ydl_opts = {
-            'format': 'bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best',
-            'merge_output_format': 'mp4',
+            # força 720p máximo
+            'format': 'best[ext=mp4][height<=720]/best[height<=720]',
 
             'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'),
 
-            'postprocessors': [
-                {
-                    'key': 'FFmpegVideoRemuxer',
-                    'preferedformat': 'mp4',
-                }
-            ],
+            # evita DASH separado
+            'merge_output_format': 'mp4',
 
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'web']
+                    'player_client': ['android']
                 }
             },
 
