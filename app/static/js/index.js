@@ -3,11 +3,20 @@ const input = document.getElementById("videoInput");
 const mensagem = document.getElementById("mensagem");
 
 const validLinks = [
-  /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/,
-  /(https?:\/\/)?(www\.)?facebook\.com\/.+/,
-  /(https?:\/\/)?(www\.)?instagram\.com\/.+/,
-  /(https?:\/\/)?(www\.)?twitch\.tv\/.+/,
-  /(https?:\/\/)?(www\.)?tiktok\.com\/.+/,
+  // YouTube: watch, youtu.be, shorts
+  /(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)[\w-]+/i,
+
+  // TikTok: links normais e encurtados (vt.tiktok.com)
+  /(https?:\/\/)?(www\.)?(tiktok\.com\/.+|vt\.tiktok\.com\/[\w-]+)/i,
+
+  // Instagram
+  /(https?:\/\/)?(www\.)?instagram\.com\/.+/i,
+
+  // Facebook
+  /(https?:\/\/)?(www\.)?facebook\.com\/.+/i,
+
+  // Twitch
+  /(https?:\/\/)?(www\.)?twitch\.tv\/.+/i,
 ];
 
 function validarLink(url) {

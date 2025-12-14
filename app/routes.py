@@ -11,23 +11,31 @@ import threading
 # --------------------------------------
 # Função para validar links
 # --------------------------------------
+import re
+
 def validar_link(url):
     patterns = [
         # YouTube: vídeos normais, links curtos e shorts
         r"(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)[\w-]+",
+
         # Facebook
         r"(https?://)?(www\.)?facebook\.com/.+",
+
         # Instagram
         r"(https?://)?(www\.)?instagram\.com/.+",
+
         # Twitch
         r"(https?://)?(www\.)?twitch\.tv/.+",
-        # TikTok
-        r"(https?://)?(www\.)?tiktok\.com/.+",
+
+        # TikTok (normal + link curto vt.tiktok.com)
+        r"(https?://)?(www\.)?(tiktok\.com/.+|vt\.tiktok\.com/[\w-]+)",
     ]
+
     for pattern in patterns:
         if re.match(pattern, url):
             return True
     return False
+
 
 
 # --------------------------------------
@@ -112,7 +120,12 @@ def download_video():
         else:
             ydl_opts = {
                 'format': 'best',
-                'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'),
+                'outtmpl': os.path.join(downloads_path, '%(title)s.%(ext)s'), # evita warning e bloqueio do YouTube
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['android', 'web']
+                    }
+                },
             }
 
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
