@@ -13,7 +13,7 @@
 body {
   background: #e6e6e6;
   color: #333;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 h1,
@@ -316,12 +316,6 @@ footer {
     width: auto;
     min-width: 90px;
     font-size: 14px;
-  }
-
-  /* FOOTER */
-  footer {
-    position: relative;
-    font-size: 13px;
   }
 
   #mensagem {
