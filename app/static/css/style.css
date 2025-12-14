@@ -328,6 +328,11 @@ section {
 }
 
 /* ===== COMO FUNCIONA ===== */
+
+.ComoFunciona {
+  margin-top: -20px;
+}
+
 .ComoFunciona h2,
 .Vantagens h2,
 .Aviso h2 {
