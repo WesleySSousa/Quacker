@@ -20,7 +20,7 @@ COPY . .
 # Seu aplicativo provavelmente está configurado para rodar na porta 5000 (padrão Flask) 
 # ou você definiu uma porta específica no seu run.py.
 # É uma boa prática expor a porta que o app usa.
-EXPOSE 3000
+EXPOSE 5000
 
 # 6. Comando de Início (CMD)
 # **Este é o ponto chave:** Substituímos o Gunicorn pelo seu comando de inicialização!
